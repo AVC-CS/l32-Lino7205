@@ -19,15 +19,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 1) Compile tests.cpp (sanity check) 5 pts
-      - name: Compile tests.cpp (sanity check)
-        id: compile_tests
+      # 1) Compile main.cpp (sanity check) 10 pts
+      - name: Compile main.cpp (sanity check)
+        id: compile_main
         uses: classroom-resources/autograding-command-grader@v1
         with:
-          test-name: "Compile tests.cpp (sanity check)"
+          test-name: "Compile main.cpp (sanity check)"
           setup-command: make clean
-          command: g++ -std=c++17 -Wall -Wextra -c tests.cpp -o /tmp/tests.o
-          timeout: 300
+          command: g++ -std=c++17 -Wall -Wextra main.cpp -o main && ./main 
+          timeout: 10
+          max-score: 10
+      # 11) Memory leak check (sanity check) 10 pts
+      - name: Sanitize Check -fsanitize=address tests.cpp (sanity check)
+        id: sanitize_check
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: "g++ -fsanitize=address (sanity check)"
+          setup-command: make clean
+          command: g++ -fsanitize=address -std=c++17 -Wall -Wextra -c tests.cpp -o /tmp/tests.o
+          timeout: 10
           max-score: 10
 
       # 2) T1
@@ -38,8 +48,8 @@ jobs:
           test-name: "Basic test [T1]"
           setup-command: make clean
           command: make test ARGS="[T1]"
-          timeout: 300
-          max-score: 10
+          timeout: 10
+          max-score: 20
 
       # 3) T2
       - name: T2 test
@@ -48,8 +58,8 @@ jobs:
         with:
           test-name: "T2 test"
           command: make test ARGS="[T2]"
-          timeout: 300
-          max-score: 10
+          timeout: 10
+          max-score: 20
 
       # 4) T3
       - name: T3 test
@@ -58,8 +68,8 @@ jobs:
         with:
           test-name: "T3 test"
           command: make test ARGS="[T3]"
-          timeout: 300
-          max-score: 10
+          timeout: 10
+          max-score: 20
 
       # 5) T4
       - name: T4 test
@@ -68,17 +78,18 @@ jobs:
         with:
           test-name: "T4 test"
           command: make test ARGS="[T4]"
-          timeout: 300
-          max-score: 10
+          timeout: 10
+          max-score: 20
 
       # Reporter
       - name: Autograding Reporter
         uses: classroom-resources/autograding-grading-reporter@v1
         env:
-          COMPILE_TESTS_RESULTS: "${{ steps.compile_tests.outputs.result }}"
+          COMPILE_MAIN_RESULTS: "${{ steps.compile_main.outputs.result }}"
+          SANITIZE_CHECK_RESULTS: "${{ steps.sanitize_check.outputs.result }}"
           T1_RESULTS: "${{ steps.t1.outputs.result }}"
           T2_RESULTS: "${{ steps.t2.outputs.result }}"
           T3_RESULTS: "${{ steps.t3.outputs.result }}"
           T4_RESULTS: "${{ steps.t4.outputs.result }}"
         with:
-          runners: compile_tests,t1,t2,t3,t4
+          runners: compile_main,sanitize_check,t1,t2,t3,t4
